@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS account_session(
     email TEXT UNIQUE NOT NULL,
     access_token TEXT NOT NULL,
     refresh_token TEXT NOT NULL,
+    expires_at TIMESTAMPTZ, 
     FOREIGN KEY (id) REFERENCES accounts(id)
 )
             
