@@ -2,6 +2,9 @@ import config
 from fastapi import requests, Request
 from datetime import timezone, datetime
 from routers.auth import encrypt_data, decrypt_data, user_sessions
+from fastapi import HTTPException
+from starlette import status
+
 import psycopg2
 conn = psycopg2.connect(config.DATABASE_URL)
 cursor = conn.cursor()

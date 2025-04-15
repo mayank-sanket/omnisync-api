@@ -8,13 +8,14 @@ from pydantic import BaseModel
 import config
 import psycopg2
 from datetime import datetime, timezone, timedelta
+from utils.fernet import encrypt_data, decrypt_data
 
 from dotenv import load_dotenv
 import os
 load_dotenv()
 
-from cryptography.fernet import Fernet
-key = Fernet.generate_key()
+
+
 
 
 # database mein values ko encrypt karne ke liye
@@ -24,24 +25,12 @@ GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
 
-ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY")
-fernet = Fernet(ENCRYPTION_KEY.encode())
 
-def encrypt_data(data: str) -> str:
-    return fernet.encrypt(data.encode()).decode()
-
-def decrypt_data(token: str) -> str:
-    return fernet.decrypt(token.encode()).decode()
-
-
-
-
-# database values encrypt karne ka end
 
 conn = psycopg2.connect(config.DATABASE_URL)
 cursor = conn.cursor()
 
-auth_router = APIRouter(
+auth_router = APIRouter(tags=["Auth"]
 )
 
 templates = Jinja2Templates(directory="templates")
@@ -59,12 +48,16 @@ user_sessions = {}
 scopes = [
     "https://www.googleapis.com/auth/drive",
     "https://www.googleapis.com/auth/documents",
+    "https://www.googleapis.com/auth/calendar",
+
     "openid",
     "profile",
     "email"
 ]
 
 scope_str = urllib.parse.quote_plus(" ".join(scopes))
+
+
 
 @auth_router.get("/", response_class=HTMLResponse)
 async def login_page(request: Request):
