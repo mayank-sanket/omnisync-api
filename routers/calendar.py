@@ -1,15 +1,13 @@
-import io
 import requests
-from fastapi.responses import StreamingResponse
-from tqdm import tqdm
-from .auth import TokenPayload
-from fastapi import HTTPException, APIRouter
+from fastapi import HTTPException, APIRouter, Depends
 from utils.fernet import encrypt_data, decrypt_data
 from database import get_db, psycopg2
 from models import cursor
 
+from dependencies import get_current_user
 
 from schemas.calendar import AddEventRequest
+
 from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
 
@@ -51,8 +49,12 @@ def get_calendar_events(access_token: str):
 
 
 @calendar_router.post("/create-event")
-def create_event( request_body: AddEventRequest ):
-    cursor.execute("""SELECT access_token FROM account_session LIMIT 1""")
+
+def create_event( request_body: AddEventRequest, user = Depends(get_current_user) ):
+    # cursor.execute("""SELECT access_token FROM account_session LIMIT 1""")
+    user_email = str(user.get('email'))
+    print(user_email)
+    cursor.execute("""SELECT access_token FROM account_session WHERE email = %s """, (user_email,))
     access_token = decrypt_data(cursor.fetchone()[0])
     service = get_service(access_token)
 
@@ -84,7 +86,7 @@ def create_event( request_body: AddEventRequest ):
     #     },
     # }
 
-    created_event = service.events().insert(calendarId='primary', body=request_body).execute()
+    created_event = service.events().insert(calendarId='primary', body=request_body.model_dump()).execute()
     return {'message': 'Event created', 'link': created_event.get('htmlLink')}
 
 

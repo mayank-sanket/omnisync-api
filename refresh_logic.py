@@ -27,5 +27,5 @@ def refresh_access(refresh_token:str):
     
     cursor.execute("SELECT expires_at FROM account_session where email = %s", (user_sessions['key_host_port'].get('email')))
     expires_at = cursor.fetchone()[0]
-    if expires_at > datetime.now(timezone.utc):
+    if expires_at < datetime.now(timezone.utc):
         print("hey")

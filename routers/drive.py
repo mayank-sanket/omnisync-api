@@ -4,6 +4,8 @@ from fastapi import Depends
 from typing import Annotated
 from fastapi.responses import StreamingResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from dependencies import get_current_user
+
 SECRET_KEY = "MAYANKSANKETTESTING13432321234321234321234321"
 ALGORITHM = "HS256"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -23,11 +25,10 @@ conn = psycopg2.connect(config.DATABASE_URL)
 cursor = conn.cursor()
 
 
-def authenticate_user(access_token: Annotated[str, Depends(oauth2_scheme)] ):
-    cursor.execute("""SELECT access_token FROM account_session WHERE access_token = %s""", (encrypt_data(access_token)))
-    access_token = decrypt_data(cursor.fetchone()[0])
-    return access_token
-
+# def authenticate_user(access_token: Annotated[str, Depends(oauth2_scheme)] ):
+#     cursor.execute("""SELECT access_token FROM account_session WHERE access_token = %s""", (encrypt_data(access_token)))
+#     access_token = decrypt_data(cursor.fetchone()[0])
+#     return access_token
 
 
 
@@ -44,8 +45,9 @@ def show_home():
 
 
 @drive_router.get("/drive_info")
-def show_drive_data(access_token: Annotated[str, Depends(authenticate_user)] ):
-    cursor.execute("""SELECT access_token FROM account_session where email = %s""", (user_sessions.get('key_host_port')))
+def show_drive_data(user = Depends(get_current_user) ):
+    user_email = user.get('email')
+    cursor.execute("""SELECT access_token FROM account_session where email = %s""", (user_email,))
 
     access_token = decrypt_data(cursor.fetchone()[0])
     headers = {"Authorization": f"Bearer {access_token}"}
@@ -64,10 +66,11 @@ def show_drive_data(access_token: Annotated[str, Depends(authenticate_user)] ):
 
 
 @drive_router.get("/drive/download/{file_id}")
-def download_google_file(file_id: str, access_token: str):
+def download_google_file(file_id: str, user = Depends(get_current_user)):
 
-    user = user_sessions[requests.client.host]
-    cursor.execute("""SELECT access_token FROM account_session WHERE email = %s""", (user))
+    user_email = user.get('email')
+    cursor.execute("""SELECT access_token FROM account_session WHERE email = %s""", (user_email, ))
+    access_token = decrypt_data(cursor.fetchone()[0])
     headers = {"Authorization": f"Bearer {access_token}"}
     download_url = f"https://www.googleapis.com/drive/v3/files/{file_id}?alt=media"
 

@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Depends, HTTPException, status
+# from fastapi.security import OAuth2PasswordBearer
+# from jose import JWTError, jwt
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 import requests
@@ -16,9 +18,6 @@ load_dotenv()
 
 
 
-
-
-# database mein values ko encrypt karne ke liye
 
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
@@ -49,6 +48,9 @@ scopes = [
     "https://www.googleapis.com/auth/drive",
     "https://www.googleapis.com/auth/documents",
     "https://www.googleapis.com/auth/calendar",
+    "https://www.googleapis.com/auth/forms.body",
+    "https://www.googleapis.com/auth/spreadsheets",
+    
 
     "openid",
     "profile",
@@ -106,7 +108,7 @@ async def google_callback(request: Request):
     key_host_port = f"{client_host}:{client_port}"
     user_sessions[key_host_port] = user_info
     
-    print(user_sessions)
+    print(f"User Sessions: {user_sessions}")
 
     cursor.execute("""
     INSERT INTO accounts (id, email)

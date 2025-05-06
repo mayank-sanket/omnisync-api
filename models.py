@@ -41,16 +41,11 @@ conn.commit()
 
 
 
-
-
-
+# -----------------------------------------------------
 
 
 # cursor.execute("""
-
-
+# CREATE TABLE IF NOT EXISTS user_sessions(
+#                id TEXT,
+#                )
 # """)
-
-# conn.commit()
-
-# conn.close()
